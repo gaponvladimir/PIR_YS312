@@ -102,27 +102,6 @@ uint16_t ADC2_Read(void)
     return raw;
 }
 
-#define PIR_ARRAY_LEN		128
-
-int16_t pir_array[PIR_ARRAY_LEN] = {0};
-
-uint16_t  get_pir_average(uint16_t value)
-{
-	int average = 0;
-	int i;
-
-	// Shift elements to right by 1
-	for(i = PIR_ARRAY_LEN - 1; i > 0; i--) {
-		pir_array[i] = pir_array[i-1];
-	}
-	pir_array[0] = value;
-
-	for(i = 0; i < PIR_ARRAY_LEN; i++) {
-		average += pir_array[i];
-	}
-
-	return (int16_t) (average / PIR_ARRAY_LEN);
-}
 
 /* USER CODE END 0 */
 
@@ -136,7 +115,6 @@ int main(void)
   /* USER CODE BEGIN 1 */
 
 	uint16_t reg = 0;
-	int16_t aver = 0;
 	YS312_Result pir;
 	MotionDetector md;
 	bool motion = false;
@@ -195,14 +173,13 @@ int main(void)
 	       * update its internal data before the next read. */
 	      //HAL_Delay(100u);
 
-	      // Get regulator gradation: 1...10
-		  reg = ADC2_Read();// / 10;
-		  //if(reg_val < 10) reg_val = 10;
+	      // Get regulator value
+		  reg = ADC2_Read();
 		  MotionDetector_SetThreshold(&md, reg);
 
 		  //DBG(DBG_DEBUG, "Regulator value: %u", reg);
 
-		  HAL_Delay(100);
+		  HAL_Delay(200);
 
 		  pir = YS312_Read();
 		  if (!pir.valid) {
@@ -210,22 +187,13 @@ int main(void)
 			  continue;
 		  }
 
-		  aver = get_pir_average(pir.value);
-
-		  if (pir.value > md.threshold || pir.value < -md.threshold) {
-			  Beep(20);
-			  motion = true;
-		  } else {
-			  motion = false;
+		  motion = MotionDetector_Update(&md, pir.value);
+		  if(motion) {
+			  Beep(50);
 		  }
 
-//		  motion = MotionDetector_Update(&md, pir.value);
-//		  if(motion) {
-//			  Beep(50);
-//		  }
-
-		  DBG(DBG_DEBUG, "PIR aver: %6d, val: %6d,  thr: %4d  motion: %s",
-				 aver, pir.value, md.threshold, motion ? "YES" : "NO");
+		  DBG(DBG_DEBUG, "PIR : %6d,  base %d: thr: %4d  motion: %s",
+				  pir.value, (int16_t)(md.baseline_scaled / 100), md.threshold, motion ? "YES" : "NO");
 
     /* USER CODE END WHILE */
 
