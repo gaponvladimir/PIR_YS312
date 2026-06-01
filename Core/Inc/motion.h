@@ -9,10 +9,10 @@
 
 typedef struct {
     int16_t  threshold;
-    uint32_t hold_time_ms;
     int32_t  baseline_scaled; /* baseline × 100 to keep precision */
-    uint32_t last_trigger_ms;
     bool     motion;
+    bool     detected;
+    uint32_t detection_time;
 } MotionDetector;
 
 void MotionDetector_Init(MotionDetector *md, uint16_t hold_time_ms);
