@@ -1,0 +1,8 @@
+# Debug directory
+**/Debug/
+# Relase directory
+**/Release/
+# Debug launch
+*.launch
+# IDE settings
+.settings/
