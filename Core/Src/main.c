@@ -154,14 +154,15 @@ int main(void)
   // Initialize motion detection
   MotionDetector_Init(&md, 500);
 
-  // delay for debug
-  //HAL_Delay(5000u);
-
   DBG(DBG_DEBUG, "Starting...\n");
   LED_Set();
   Beep(200);
   LED_Clr();
 
+  uint32_t start_time = HAL_GetTick();
+
+  // delay for debug
+  //HAL_Delay(5000u);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -171,15 +172,13 @@ int main(void)
   {
 	  /* Poll no faster than tR ≈ 16 ms so the sensor has time to
 	       * update its internal data before the next read. */
-	      //HAL_Delay(100u);
+	      HAL_Delay(200u);
 
 	      // Get regulator value
 		  reg = ADC2_Read();
 		  MotionDetector_SetThreshold(&md, reg);
 
 		  //DBG(DBG_DEBUG, "Regulator value: %u", reg);
-
-		  HAL_Delay(200);
 
 		  pir = YS312_Read();
 		  if (!pir.valid) {
@@ -188,8 +187,10 @@ int main(void)
 		  }
 
 		  motion = MotionDetector_Update(&md, pir.value);
-		  if(motion) {
-			  Beep(50);
+		  if(GetTickDiff(start_time, HAL_GetTick()) > PIR_STARTUP_TIME) {
+			  if(motion) {
+				  Beep(50);
+			  }
 		  }
 
 		  DBG(DBG_DEBUG, "PIR : %6d,  base %d: thr: %4d  motion: %s",

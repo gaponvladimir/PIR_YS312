@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define PIR_STARTUP_TIME				3000
 #define MOTION_THRESHOLD_DEFAULT		100
 
 typedef struct {
