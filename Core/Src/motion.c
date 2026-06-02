@@ -51,27 +51,25 @@ bool MotionDetector_Update(MotionDetector *md, int16_t pir_value)
     int16_t deviation = pir_value - baseline;
     if (deviation < 0) deviation = -deviation;
 
+    // Set motion to false before detection
     md->motion = false;
 
     if (deviation > md->threshold) {
     	if(md->detected) {
     		if (++md->detection_time >= MOTION_DETECT_CNT) {
     	        md->motion = true;
-
     	        md->detected = false;
-    	        md->detection_time = 0;
     		}
     	} else {
-    		md->detection_time = 0;
     		md->detected = true;
+    		md->detection_time = 0;
     	}
     } else {
     	md->detected = false;
-    	md->detection_time = 0;
     }
 
     /* Update baseline only in idle via EMA */
-    if (!md->motion) {
+    if (!md->motion && !md->detected) {
         /*
          * baseline_scaled = baseline_scaled * 99/100 + pir_value * 100 * 1/100
          *                 = baseline_scaled * 99/100 + pir_value
